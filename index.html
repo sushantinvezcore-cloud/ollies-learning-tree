@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Ollie's Learning Tree</title>
+  <meta name="description" content="Ten minutes a day of counting, adding, subtracting and reading for little learners.">
+  <meta name="theme-color" content="#7ec8f2">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Ollie's Tree">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Andika: a font designed for beginning readers (single-storey a and g) -->
+  <link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Splash: the first tap unlocks speech + sound on iPad -->
+    <section id="screen-splash" class="screen active">
+      <div class="splash-inner">
+        <div class="splash-emoji bob">🦉</div>
+        <h1 class="splash-title">Ollie's Learning Tree</h1>
+        <button id="btn-start" class="big-btn pulse" aria-label="Start">▶</button>
+      </div>
+    </section>
+
+    <!-- Home -->
+    <section id="screen-home" class="screen">
+      <header class="home-top">
+        <div class="streak" id="streak">🔥 0</div>
+        <div class="greeting" id="greeting">Let's learn!</div>
+        <button id="btn-parent" class="icon-btn subtle" aria-label="Grown-ups (hold)">⚙️</button>
+      </header>
+      <main class="home-cards">
+        <button class="track-card math" id="card-math">
+          <div class="track-icon">🔢</div>
+          <div class="track-name">1 2 3</div>
+          <div class="track-stars" id="stars-math"></div>
+          <div class="track-done" id="done-math">✅</div>
+        </button>
+        <button class="track-card read" id="card-read">
+          <div class="track-icon">🔤</div>
+          <div class="track-name">a b c</div>
+          <div class="track-stars" id="stars-read"></div>
+          <div class="track-done" id="done-read">✅</div>
+        </button>
+      </main>
+      <footer class="home-bottom">
+        <button id="btn-stickers" class="pill-btn">📒 <span id="sticker-count">0</span></button>
+      </footer>
+      <div class="parent-hold-hint" id="parent-hint">Grown-ups: press and hold ⚙️</div>
+    </section>
+
+    <!-- Lesson (teaching slides) -->
+    <section id="screen-lesson" class="screen">
+      <header class="play-top">
+        <button class="icon-btn" data-action="home" aria-label="Home">🏠</button>
+        <div class="lesson-badge">✨ New! ✨</div>
+        <button class="icon-btn" id="lesson-replay" aria-label="Say it again">🔊</button>
+      </header>
+      <main class="lesson-stage" id="lesson-stage"></main>
+      <footer class="lesson-bottom">
+        <button id="lesson-next" class="big-btn next-btn" aria-label="Next">▶</button>
+      </footer>
+    </section>
+
+    <!-- Question -->
+    <section id="screen-play" class="screen">
+      <header class="play-top">
+        <button class="icon-btn" data-action="home" aria-label="Home">🏠</button>
+        <div class="progress" id="progress"></div>
+        <button class="icon-btn" id="play-replay" aria-label="Say it again">🔊</button>
+      </header>
+      <main class="play-stage" id="play-stage"></main>
+      <footer class="choices" id="choices"></footer>
+    </section>
+
+    <!-- Reward -->
+    <section id="screen-reward" class="screen">
+      <div class="reward-inner">
+        <div class="reward-title">You did it!</div>
+        <div class="reward-sticker pop" id="reward-sticker">🦄</div>
+        <div class="reward-stars" id="reward-stars"></div>
+        <div class="reward-note" id="reward-note"></div>
+        <button class="big-btn" data-action="home" aria-label="Home">🏠</button>
+      </div>
+      <div class="confetti" id="confetti"></div>
+    </section>
+
+    <!-- Sticker book -->
+    <section id="screen-stickers" class="screen">
+      <header class="play-top">
+        <button class="icon-btn" data-action="home" aria-label="Home">🏠</button>
+        <div class="lesson-badge">📒 My Stickers</div>
+        <span class="icon-btn ghost"></span>
+      </header>
+      <main class="sticker-grid" id="sticker-grid"></main>
+    </section>
+
+    <!-- Parent area -->
+    <section id="screen-parent" class="screen">
+      <header class="play-top">
+        <button class="icon-btn" data-action="home" aria-label="Home">🏠</button>
+        <div class="lesson-badge">Grown-ups</div>
+        <span class="icon-btn ghost"></span>
+      </header>
+      <main class="parent-body" id="parent-body"></main>
+    </section>
+  </div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

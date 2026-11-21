@@ -1,0 +1,16 @@
+{
+  "name": "Ollie's Learning Tree",
+  "short_name": "Ollie's Tree",
+  "description": "Daily counting, adding, subtracting and reading for little learners.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#bfe6ff",
+  "theme_color": "#7ec8f2",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -23,6 +23,55 @@ function tone(freq, start, dur, type = 'sine', vol = 0.18) {
   o.stop(t0 + dur + 0.05);
 }
 
+// ---------- recorded clips (letter sounds) ----------
+const buffers = {};
+const loading = {};
+let current = null;
+
+function decode(ab) {
+  // Older Safari only supports the callback form of decodeAudioData.
+  return new Promise((resolve, reject) => ctx.decodeAudioData(ab, resolve, reject));
+}
+
+export function loadClip(url) {
+  if (buffers[url]) return Promise.resolve(buffers[url]);
+  if (!loading[url]) {
+    loading[url] = fetch(url)
+      .then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+      .then(decode)
+      .then(b => (buffers[url] = b))
+      .catch(e => { delete loading[url]; throw e; });
+  }
+  return loading[url];
+}
+
+export function preload(urls) { if (ctx) urls.forEach(u => loadClip(u).catch(() => {})); }
+
+/** Play a clip; resolves when it ends. Rejects if audio isn't available (caller falls back to speech). */
+export async function playClip(url, rate = 1) {
+  if (!ctx) throw new Error('no audio');
+  if (ctx.state === 'suspended') await ctx.resume();
+  const buf = await loadClip(url);
+  return new Promise(resolve => {
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.playbackRate.value = rate;
+    const g = ctx.createGain();
+    g.gain.value = 1;
+    src.connect(g).connect(ctx.destination);
+    const t = setTimeout(done, (buf.duration / rate) * 1000 + 400);
+    function done() { clearTimeout(t); if (current === src) current = null; resolve(); }
+    src.onended = done;
+    current = src;
+    src.start();
+  });
+}
+
+export function stopClip() {
+  try { current?.stop(); } catch { /* already stopped */ }
+  current = null;
+}
+
 export function pop() { tone(660, 0, 0.12, 'triangle', 0.15); }
 export function correct() { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.09, 0.25, 'triangle')); }
 export function wrong() { tone(330, 0, 0.18, 'sine', 0.12); tone(262, 0.16, 0.25, 'sine', 0.12); }

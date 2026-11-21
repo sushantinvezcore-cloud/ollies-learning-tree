@@ -184,7 +184,7 @@ button {
 .next-btn { width: 18vmin; height: 18vmin; font-size: 8vmin; opacity: 0.35; transform: scale(0.9); transition: opacity .3s, transform .3s; }
 .next-btn.ready { opacity: 1; transform: scale(1); animation: pulse 1.4s ease-in-out infinite; }
 
-.scene { display: flex; flex-direction: column; align-items: center; gap: 3vmin; }
+.scene { display: flex; flex-direction: column; align-items: center; gap: 2vmin; }
 .scene .row { display: flex; align-items: center; gap: 6vmin; }
 
 /* countable objects */
@@ -193,7 +193,7 @@ button {
   grid-template-columns: repeat(var(--cols), auto);
   gap: 2vmin;
   justify-content: center;
-  padding: 2vmin;
+  padding: 1.2vmin;
   border-radius: 4vmin;
   transition: background .25s, box-shadow .25s;
 }
@@ -205,9 +205,9 @@ button {
   transition: transform .15s, opacity .4s;
 }
 .obj .e { display: block; }
-.objs.size-xl .obj { font-size: 19vmin; }
-.objs.size-lg .obj { font-size: 14vmin; }
-.objs.size-md .obj { font-size: 10vmin; }
+.objs.size-xl .obj { font-size: min(19vmin, 22vw); }
+.objs.size-lg .obj { font-size: min(14vmin, 11.5vw); }
+.objs.size-md .obj { font-size: min(10vmin, 8.5vw); }
 .objs.size-sm .obj { font-size: 7.5vmin; }
 .obj:active { transform: scale(0.9); }
 .obj.counted { transform: scale(1.06); }
@@ -236,8 +236,8 @@ button {
 
 .eq {
   display: flex; gap: 2.5vmin; align-items: center;
-  font-size: 9vmin; font-weight: 700;
-  background: rgba(255,255,255,.7); padding: 1vmin 4vmin; border-radius: 3vmin;
+  font-size: 8vmin; font-weight: 700; line-height: 1.1;
+  background: rgba(255,255,255,.7); padding: 0.6vmin 4vmin; border-radius: 3vmin;
 }
 .eq .op { color: var(--purple-d); }
 .eq .ans { min-width: 8vmin; text-align: center; color: var(--soft); }
@@ -327,6 +327,25 @@ button {
 .choice.more-choice { min-width: 34vmin; min-height: 26vmin; }
 .choice.more-choice .mini i { font-size: 7vmin; }
 .compare-row .big-op { font-size: 7vmin; color: var(--soft); }
+
+/* rows of ten: a small gap after every fifth object makes 10s easy to see */
+.objs.tens { column-gap: 1.2vmin; row-gap: 1.6vmin; }
+.objs.tens .obj { font-size: min(6.5vmin, 4.9vw); padding: 0; } /* 10 per row must fit a portrait iPad */
+.objs.tens .obj:nth-child(10n + 5) { margin-right: 2.5vmin; }
+
+/* ten-frames */
+.ten-frames { display: flex; flex-wrap: wrap; gap: 3vmin; justify-content: center; max-width: 94vw; }
+.ten-frame {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.8vmin; padding: 1vmin;
+  background: var(--purple-d); border-radius: 2vmin; transition: box-shadow .2s, transform .2s;
+}
+.ten-frame.glow { transform: scale(1.05); }
+.tf-cell { width: 8vmin; height: 8vmin; background: #fff; border-radius: 1vmin; display: grid; place-items: center; transition: transform .2s; }
+.tf-cell.on::after { content: ''; width: 70%; height: 70%; border-radius: 50%; background: var(--orange); }
+.tf-cell.glow { transform: scale(1.2); }
+.ten-frames:has(.ten-frame:nth-child(3)) .tf-cell { width: 6.5vmin; height: 6.5vmin; }
+.choice.big-num-choice { min-width: 32vmin; min-height: 26vmin; }
+.choice.big-num-choice .num { font-size: 18vmin; }
 
 /* patterns */
 /* Cells shrink so the whole pattern always fits on one row. */

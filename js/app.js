@@ -2,9 +2,9 @@
 import * as speech from './speech.js';
 import * as sound from './sound.js';
 import * as store from './store.js';
-import { $, h, pick, shuffle } from './ui.js';
+import { $, h, pick, shuffle, resetFresh } from './ui.js';
 import { LEVELS as MATH } from './math.js';
-import { LEVELS as READ } from './reading.js';
+import { LEVELS as READ, LETTERS, soundClip } from './reading.js';
 
 const CURRICULA = { math: MATH, read: READ };
 const TRACK_NAMES = { math: 'Numbers', read: 'Letters' };
@@ -38,6 +38,7 @@ $('#btn-start').addEventListener('click', () => {
   speech.unlock();
   sound.unlock();
   speech.configure({ rate: S().rate, voiceName: S().voiceName });
+  sound.preload(Object.keys(LETTERS).map(soundClip));
   goHome();
   const name = S().name;
   speech.speak(name ? `Hi ${name}! Let's learn!` : "Hi! Let's learn!", 'Pick numbers, or letters.');
@@ -129,6 +130,7 @@ function buildQuestions(track, count) {
 }
 
 function startSession(track) {
+  resetFresh(); // no picture, object or word repeats within this round
   const st = S();
   const t = store.today(track);
   const finished = t.done >= st.perDay;
@@ -382,7 +384,7 @@ function openParent() {
 
   const voices = speech.englishVoices();
   const voiceSel = h('select', {
-    onchange: e => { st.voiceName = e.target.value || null; store.save(); speech.configure({ voiceName: st.voiceName }); speech.speak('Hi! I am Ollie the owl. sss, aah, tuh.'); },
+    onchange: e => { st.voiceName = e.target.value || null; store.save(); speech.configure({ voiceName: st.voiceName }); speech.speak('Hi! I am Ollie the owl. This is how I sound.'); },
   }, h('option', { value: '' }, 'Automatic'), ...voices.map(v => {
     const o = h('option', { value: v.name }, `${v.name} (${v.lang})`);
     if (v.name === st.voiceName) o.selected = true;

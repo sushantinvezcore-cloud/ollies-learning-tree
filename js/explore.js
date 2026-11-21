@@ -1,5 +1,5 @@
 // Extra number-sense games: patterns, shapes and "quick look" (seeing how many without counting).
-import { h, rand, pick, pickN, shuffle, numberChoices, focusOn } from './ui.js';
+import { h, rand, pick, pickN, shuffle, numberChoices, focusOn, fresh, freshN } from './ui.js';
 
 const mascot = text => h('div', { class: 'mascot-wrap' }, h('div', { class: 'mascot bob' }, '🦉'), text ? h('div', { class: 'mascot-text' }, text) : null);
 
@@ -15,7 +15,7 @@ const UNITS = { easy: ['AB'], medium: ['AB', 'AAB', 'ABB'], hard: ['AAB', 'ABB',
 export function qPattern(level) {
   const unitStr = pick(UNITS[level]);
   const letters = [...new Set(unitStr)];
-  const items = pickN(PATTERN_ITEMS, letters.length + 1);
+  const items = freshN(PATTERN_ITEMS, letters.length + 1, it => it[0]);
   const map = Object.fromEntries(letters.map((l, k) => [l, items[k]]));
   const unit = [...unitStr].map(l => map[l]);
   // At least one and a half repeats, but never more than 7 items so it fits on one row.
@@ -97,7 +97,7 @@ export function qShapeFind(set) {
 
 /** "What shape is the pizza slice?" — spotting shapes in real things. */
 export function qShapeThing() {
-  const [emoji, thing, shape] = pick(SHAPE_THINGS);
+  const [emoji, thing, shape] = fresh(SHAPE_THINGS, x => x[0]);
   const others = pickN(Object.keys(SHAPES), 2, n => n === shape || (shape === 'square' && n === 'rectangle') || (shape === 'rectangle' && n === 'square') || (shape === 'circle' && n === 'oval') || (shape === 'oval' && n === 'circle'));
   const options = shuffle([shape, ...others]);
   return {

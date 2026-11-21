@@ -1,8 +1,8 @@
 # Ollie's Learning Tree
 
-A daily learning game for a 4-year-old who isn't reading or counting yet. Every day there are
-**10 number questions** and **10 letter/reading questions**. Everything is spoken aloud, so no reading is
-needed to play. Progress and stickers are saved on the iPad.
+A daily learning game for a 4-year-old. Every day there are **10 number questions** and
+**10 letter/reading questions**. Everything is spoken aloud, so no reading is needed to play. Progress and
+stickers are saved on the iPad.
 
 ## How it teaches
 
@@ -13,35 +13,53 @@ needed to play. Progress and stickers are saved on the iPad.
 - **Wrong answers get help, not punishment.** For counting, Ollie counts the objects together with her.
   For letters, Ollie says the sound she tapped and then repeats the target sound.
 - **About 30% of each round is review** from earlier levels.
+- **Nothing repeats within a round.** Every picture, object and word shown in a round is remembered, and
+  the next question picks something new.
 
-| Numbers | Letters & reading |
+### Numbers
+
+She can already count small numbers, so it starts at 10–30. Small numbers only come back for adding and
+taking away, and even then at least one number is between 4 and 9.
+
+| Level | What she does |
 |---|---|
-| 1. Counting 1–3 (tap each thing to count), shapes ◯ △ ▢ | 1–9. Letter sounds in the phonics order s a t · p i n · m d g · o c k · e u r · h b f · l j v · w y z · x q |
-| 2. Counting to 5, which side has more, patterns (🍎🍌🍎🍌?), quick look | Sounding out words starts at level 2 (after s a t p i n), using only letters she knows |
-| 3. Number shapes 1–5, what comes next, tracing numbers, more shapes | Rhyming and fill-in-the-missing-letter start at level 3 |
-| 4. Counting to 10, more/fewer, harder patterns, shapes in real things (🍕 = triangle) | Spelling (tap the letters in order) and finding a word she hears start at level 4 |
-| 5. Number shapes 1–10, tracing, quick look up to 6 | 10. Longer words (frog, hand, zebra…) |
-| 6. Adding to 5 (with pictures) | 11. Finding words |
-| 7. Taking away within 5 | 12–13. Sight words (I, a, the, see, is, my, and, go, can…) |
-| 8. Adding to 10 | 14. Reading short sentences ("I see a cat.") |
-| 9. Taking away within 10 | |
-| 10. Plus and minus mixed | |
+| 1. Counting 10–20 | Tap-count 10–20 things (laid out in rows of ten), find numbers, what comes next |
+| 2. Teen numbers | Ten-frames ("one full ten and 4 more = 14"), before/after, which is bigger, tracing |
+| 3. Counting to 30 | Count up to 30, counting by tens, next/before, bigger/smaller |
+| 4. Adding within 10 | With pictures, e.g. 5 + 3, 6 + 2 |
+| 5. Taking away within 10 | Starting from 5–10, e.g. 9 − 4 |
+| 6. Adding to 20 | e.g. 10 + 4, 8 + 5 ("start at 8 and count on") |
+| 7. Taking away within 20 | e.g. 15 − 5, 13 − 4 |
+| 8. Plus and minus to 20 | Mixed |
 
-**Fill in the missing letter** uses about 130 picture words (cat, frog, zebra…). Each word can have a different
-letter missing (`_at`, `c_t`, `ca_`), for about 320 puzzles in all. Only letters that make their plain sound
-can go missing, never silent letters or pairs like "sh" or "ee". The difficulty rises step by step:
+Patterns (🍎🍌🍎🍌?) and shapes (◯ △ ▢, and "what shape is the pizza slice?") come up now and then as
+extras. Extras and tracing don't count towards moving up a level.
+
+### Letters and reading
+
+| Level | What she does |
+|---|---|
+| 1–9. Letter sounds | In the phonics order s a t · p i n · m d g · o c k · e u r · h b f · l j v · w y z · x q |
+| from 2 | Sounding out words made only of letters she knows (pan, tap, sit…) |
+| from 3 | Rhyming, fill in the missing letter, big/little letters |
+| from 4 | Spelling (tap the letters in order), finding a word she hears |
+| 10. Longer words | frog, hand, zebra… |
+| 11. Finding words | |
+| 12–13. Sight words | I, a, the, see, is, my, and, go, can… |
+| 14. Sentences | "I see a cat." |
+
+**Letter sounds are real recordings** (`audio/sounds/`), so "s" is a long "sssss", not the letter name
+"ess". They were made with the Windows speech engine using phonetic (IPA) input. Each letter has 2–6
+different pictures ("s" like sun, sock, snake, star, seal, sandwich), so the same picture isn't repeated.
+
+**Fill in the missing letter** uses about 130 picture words. Each word can have a different letter missing
+(`_at`, `c_t`, `ca_`), for about 320 puzzles in all. Only letters that make their plain sound can go
+missing, never silent letters or pairs like "sh" or "ee". The difficulty rises step by step:
 
 - letter levels 3–4: only the first letter is missing (`_at`)
 - letter levels 5–6: the first or the last letter (`ca_`)
 - from letter level 7: any letter, including the vowel in the middle (`c_t`)
 - once she knows every letter: 4- and 5-letter words too (`fr_g`, `zeb_a`)
-
-Tracing numbers is handwriting practice, so it doesn't count towards moving up a level.
-
-**Quick look** shows dots in dice patterns for about a second, then hides them. It teaches her to recognise
-small amounts instantly instead of counting one by one. **Patterns** go from AB (🍎🍌🍎🍌) to AAB, ABB, ABC and AABB.
-In the adding and taking-away levels, about 1 question in 4 is a bonus pattern, shape or quick-look
-question to keep things varied. Bonus questions don't count towards moving up.
 
 ## Grown-ups area
 

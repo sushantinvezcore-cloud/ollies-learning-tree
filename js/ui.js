@@ -41,6 +41,39 @@ export function pickN(arr, count, reject = () => false) {
   return shuffle(arr.filter(x => !reject(x))).slice(0, count);
 }
 
+// ---------- no-repeat picking within one round ----------
+// Every picture, object or word used in the current round is remembered, so the next question
+// picks something new. Once a whole list has been used it starts over (never the same one twice in a row).
+const used = new Set();
+let lastPicked = null;
+export function resetFresh() { used.clear(); lastPicked = null; }
+export const isUsed = key => used.has(key);
+
+export function fresh(list, keyFn = x => x, reject = () => false) {
+  const ok = list.filter(x => !reject(x));
+  let avail = ok.filter(x => !used.has(keyFn(x)));
+  if (!avail.length) {
+    ok.forEach(x => used.delete(keyFn(x)));
+    avail = ok.filter(x => keyFn(x) !== lastPicked);
+    if (!avail.length) avail = ok;
+  }
+  const item = pick(avail);
+  if (item !== undefined) { used.add(keyFn(item)); lastPicked = keyFn(item); }
+  return item;
+}
+
+/** n distinct items, preferring ones not yet seen this round. */
+export function freshN(list, n, keyFn = x => x, reject = () => false) {
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const taken = new Set(out.map(keyFn));
+    const item = fresh(list, keyFn, x => reject(x) || taken.has(keyFn(x)));
+    if (item === undefined) break;
+    out.push(item);
+  }
+  return out;
+}
+
 /** The answer plus nearby distinct distractors within [lo, hi], shuffled. */
 export function numberChoices(answer, lo, hi, count = 3) {
   const pool = [];
@@ -62,13 +95,13 @@ export function dotsHTML(n) {
 }
 
 /** A group of tappable emoji objects, laid out in rows of five. */
-export function countGroup(n, emoji, size) {
+export function countGroup(n, emoji, size, cols = 5) {
   const sz = size || (n <= 3 ? 'xl' : n <= 5 ? 'lg' : 'md');
-  const el = h('div', { class: `objs size-${sz}`, style: { '--cols': Math.min(n, 5) } });
+  const el = h('div', { class: `objs size-${sz}`, style: { '--cols': Math.min(n, cols) } });
   const objs = [];
   for (let i = 0; i < n; i++) {
     const o = h('button', { class: 'obj', 'aria-label': 'thing' }, h('span', { class: 'e' }, emoji));
-    o.style.animationDelay = `${i * 60}ms`;
+    o.style.animationDelay = `${Math.min(i * 30, 450)}ms`; // big groups still appear quickly
     el.append(o);
     objs.push(o);
   }

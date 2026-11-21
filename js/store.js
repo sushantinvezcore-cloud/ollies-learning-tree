@@ -1,7 +1,11 @@
 // Progress is saved on the device (localStorage). Nothing leaves the iPad.
 const KEY = 'ollies-learning-tree-v1';
 
+// Bump when a track's levels are rebuilt, so saved progress for that track starts again at level 1.
+const CURRICULUM = { math: 2, read: 1 };
+
 const DEFAULT = () => ({
+  curriculum: { ...CURRICULUM },
   name: '',
   perDay: 10,
   rate: 0.85,
@@ -23,7 +27,12 @@ function load() {
     if (!raw) return DEFAULT();
     const s = JSON.parse(raw);
     const d = DEFAULT();
-    return { ...d, ...s, tracks: { ...d.tracks, ...(s.tracks || {}) } };
+    const merged = { ...d, ...s, tracks: { ...d.tracks, ...(s.tracks || {}) } };
+    for (const t of Object.keys(CURRICULUM)) {
+      if ((s.curriculum?.[t] || 1) !== CURRICULUM[t]) merged.tracks[t] = d.tracks[t];
+    }
+    merged.curriculum = { ...CURRICULUM };
+    return merged;
   } catch {
     return DEFAULT();
   }

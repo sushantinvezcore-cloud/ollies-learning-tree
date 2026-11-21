@@ -1,16 +1,16 @@
 // Reading curriculum (phonics-first):
 // letter sounds (in the classic s-a-t-p-i-n order) -> sounding out 3-letter words -> sight words -> sentences.
-import { h, pick, pickN, shuffle, focusOn, glow } from './ui.js';
+import { h, pick, pickN, shuffle, focusOn, glow, fresh, freshN, isUsed } from './ui.js';
 import * as speech from './speech.js';
 import { FILL_WORDS, blankable } from './words.js';
 
-// `sound` is spelled so a text-to-speech voice says something close to the phoneme.
+// `sound` is a spelling used only if the recorded clip in audio/sounds/ can't play.
 export const LETTERS = {
   s: { name: 'ess', sound: 'sss', word: 'sun', pic: '☀️' },
   a: { name: 'ay', sound: 'aah', word: 'ant', pic: '🐜' },
   t: { name: 'tee', sound: 'tuh', word: 'tiger', pic: '🐯' },
   p: { name: 'pee', sound: 'puh', word: 'pig', pic: '🐷' },
-  i: { name: 'eye', sound: 'ih', word: 'insect', pic: '🐞' },
+  i: { name: 'eye', sound: 'ih', word: 'insect', pic: '🦗' },
   n: { name: 'en', sound: 'nnn', word: 'nose', pic: '👃' },
   m: { name: 'em', sound: 'mmm', word: 'monkey', pic: '🐒' },
   d: { name: 'dee', sound: 'duh', word: 'dog', pic: '🐶' },
@@ -36,41 +36,44 @@ export const LETTERS = {
 // c and k make the same sound, so never offer both as competing answers.
 const soundOf = l => (l === 'c' || l === 'k' ? 'k' : l);
 
-// Extra pictures by first letter, for "which picture starts with..." questions.
+// Pictures by first sound. Plenty per letter so a round never shows the same picture twice.
 const PICS = {
-  s: [['sun', '☀️'], ['sock', '🧦'], ['snake', '🐍'], ['star', '⭐']],
-  a: [['ant', '🐜'], ['apple', '🍎'], ['alligator', '🐊']],
-  t: [['tiger', '🐯'], ['tomato', '🍅'], ['tent', '⛺'], ['turtle', '🐢']],
-  p: [['pig', '🐷'], ['pizza', '🍕'], ['penguin', '🐧'], ['pear', '🍐']],
-  i: [['insect', '🐞']],
-  n: [['nose', '👃'], ['nut', '🥜'], ['net', '🥅']],
-  m: [['monkey', '🐒'], ['moon', '🌙'], ['mouse', '🐭'], ['milk', '🥛']],
-  d: [['dog', '🐶'], ['duck', '🦆'], ['drum', '🥁'], ['door', '🚪']],
-  g: [['goat', '🐐'], ['gift', '🎁'], ['grapes', '🍇'], ['guitar', '🎸']],
-  o: [['octopus', '🐙'], ['ox', '🐂'], ['otter', '🦦']],
-  c: [['cat', '🐱'], ['cake', '🎂'], ['car', '🚗'], ['cow', '🐮']],
-  k: [['kite', '🪁'], ['king', '🤴'], ['key', '🔑'], ['koala', '🐨']],
-  e: [['egg', '🥚'], ['elephant', '🐘'], ['elf', '🧝']],
-  u: [['umbrella', '☂️']],
-  r: [['rabbit', '🐰'], ['rainbow', '🌈'], ['robot', '🤖'], ['rocket', '🚀']],
-  h: [['hat', '🎩'], ['horse', '🐴'], ['house', '🏠'], ['heart', '❤️']],
-  b: [['bus', '🚌'], ['bear', '🐻'], ['banana', '🍌'], ['bee', '🐝']],
-  f: [['fish', '🐟'], ['frog', '🐸'], ['fire', '🔥'], ['foot', '🦶']],
-  l: [['lion', '🦁'], ['leaf', '🍃'], ['lemon', '🍋'], ['lips', '👄']],
-  j: [['juice', '🧃'], ['jeans', '👖']],
-  v: [['van', '🚐'], ['violin', '🎻'], ['volcano', '🌋']],
-  w: [['whale', '🐳'], ['watermelon', '🍉'], ['wolf', '🐺'], ['watch', '⌚']],
-  y: [['yo-yo', '🪀'], ['yarn', '🧶']],
-  z: [['zebra', '🦓']],
-  q: [['queen', '👸']],
+  s: [['sun', '☀️'], ['sock', '🧦'], ['snake', '🐍'], ['star', '⭐'], ['seal', '🦭'], ['sandwich', '🥪']],
+  a: [['ant', '🐜'], ['apple', '🍎'], ['alligator', '🐊'], ['axe', '🪓'], ['astronaut', '🧑‍🚀'], ['acrobat', '🤸']],
+  t: [['tiger', '🐯'], ['tomato', '🍅'], ['tent', '⛺'], ['turtle', '🐢'], ['tooth', '🦷'], ['train', '🚆']],
+  p: [['pig', '🐷'], ['pizza', '🍕'], ['penguin', '🐧'], ['pear', '🍐'], ['pumpkin', '🎃'], ['panda', '🐼']],
+  i: [['insect', '🦗'], ['infant', '👶'], ['injection', '💉'], ['ill', '🤒']],
+  n: [['nose', '👃'], ['nut', '🥜'], ['net', '🥅'], ['nest', '🪺'], ['noodles', '🍜'], ['nine', '9️⃣']],
+  m: [['monkey', '🐒'], ['moon', '🌙'], ['mouse', '🐭'], ['milk', '🥛'], ['mushroom', '🍄'], ['map', '🗺️']],
+  d: [['dog', '🐶'], ['duck', '🦆'], ['drum', '🥁'], ['door', '🚪'], ['dinosaur', '🦕'], ['dolphin', '🐬']],
+  g: [['goat', '🐐'], ['gift', '🎁'], ['grapes', '🍇'], ['guitar', '🎸'], ['gorilla', '🦍'], ['ghost', '👻']],
+  o: [['octopus', '🐙'], ['ox', '🐂'], ['otter', '🦦'], ['olive', '🫒']],
+  c: [['cat', '🐱'], ['cake', '🎂'], ['car', '🚗'], ['cow', '🐮'], ['carrot', '🥕'], ['camel', '🐫']],
+  k: [['kite', '🪁'], ['king', '🤴'], ['key', '🔑'], ['koala', '🐨'], ['kangaroo', '🦘'], ['kiwi', '🥝']],
+  e: [['egg', '🥚'], ['elephant', '🐘'], ['elf', '🧝'], ['envelope', '✉️']],
+  u: [['umbrella', '☂️'], ['up', '⬆️'], ['upside down', '🙃']],
+  r: [['rabbit', '🐰'], ['rainbow', '🌈'], ['robot', '🤖'], ['rocket', '🚀'], ['ring', '💍'], ['rose', '🌹']],
+  h: [['hat', '🎩'], ['horse', '🐴'], ['house', '🏠'], ['heart', '❤️'], ['hamburger', '🍔'], ['hedgehog', '🦔']],
+  b: [['bus', '🚌'], ['bear', '🐻'], ['banana', '🍌'], ['bee', '🐝'], ['ball', '⚽'], ['bird', '🐦']],
+  f: [['fish', '🐟'], ['frog', '🐸'], ['fire', '🔥'], ['foot', '🦶'], ['flower', '🌸'], ['fork', '🍴']],
+  l: [['lion', '🦁'], ['leaf', '🍃'], ['lemon', '🍋'], ['lips', '👄'], ['lollipop', '🍭'], ['ladybug', '🐞']],
+  j: [['juice', '🧃'], ['jeans', '👖'], ['jellyfish', '🪼'], ['jar', '🫙'], ['jeep', '🚙']],
+  v: [['van', '🚐'], ['violin', '🎻'], ['volcano', '🌋'], ['vest', '🦺'], ['vase', '🏺']],
+  w: [['whale', '🐳'], ['watermelon', '🍉'], ['wolf', '🐺'], ['watch', '⌚'], ['worm', '🪱'], ['web', '🕸️']],
+  y: [['yo-yo', '🪀'], ['yarn', '🧶'], ['yawn', '🥱'], ['yellow', '🟡']],
+  z: [['zebra', '🦓'], ['zero', '0️⃣'], ['zipper', '🤐']],
+  q: [['queen', '👸'], ['question', '❓'], ['quarter', '🪙'], ['quiet', '🤫']],
 };
+const picKey = p => p[1];
+// x is heard at the end of words
+const ENDS_WITH_X = [['fox', '🦊'], ['box', '📦'], ['six', '6️⃣']];
 
 // Words with clear pictures. Each one unlocks for reading as soon as she knows all its letters,
 // so reading real words starts right after s a t p i n.
 const WORDS = [
-  ['pan', '🍳'], ['pin', '📌'], ['tap', '🚰'], ['nap', '😴'], ['ant', '🐜'],
+  ['pan', '🍳'], ['pin', '📌'], ['tap', '🚰'], ['nap', '😴'], ['ant', '🐜'], ['tin', '🥫'], ['sip', '🥤'], ['sit', '🪑'],
   ['map', '🗺️'], ['pig', '🐷'], ['dig', '⛏️'], ['sad', '😢'], ['tag', '🏷️'], ['man', '👨'], ['sand', '🏖️'],
-  ['dog', '🐶'], ['cat', '🐱'], ['cap', '🧢'], ['kid', '🧒'], ['mop', '🧹'], ['cop', '👮'], ['can', '🥫'],
+  ['dog', '🐶'], ['cat', '🐱'], ['cap', '🧢'], ['kid', '🧒'], ['mop', '🧹'], ['cop', '👮'], ['can', '🛢️'],
   ['sun', '☀️'], ['nut', '🥜'], ['mug', '☕'], ['rat', '🐀'], ['red', '🔴'], ['ten', '🔟'], ['pen', '🖊️'],
   ['net', '🥅'], ['run', '🏃'], ['drum', '🥁'], ['tent', '⛺'],
   ['hat', '🎩'], ['hen', '🐔'], ['bus', '🚌'], ['bed', '🛏️'], ['bat', '🦇'], ['bug', '🐛'], ['hug', '🤗'],
@@ -87,7 +90,17 @@ const RHYMES = [
   ['cat', 'hat', 'bat', 'rat'], ['bug', 'mug', 'hug'], ['hen', 'pen', 'ten'], ['pan', 'man', 'van', 'can'],
   ['pig', 'dig'], ['dog', 'log', 'frog'], ['fox', 'box'], ['bed', 'red'], ['net', 'jet'], ['sun', 'run'],
   ['map', 'cap', 'tap', 'nap'], ['sand', 'hand'],
+  ['bee', 'tree', 'key', 'three'], ['goat', 'boat', 'coat'], ['car', 'star', 'jar'], ['sock', 'rock', 'clock'],
+  ['cake', 'snake', 'lake'], ['ring', 'king', 'swing'], ['house', 'mouse'], ['snail', 'nail', 'mail'],
+  ['moon', 'spoon', 'balloon'], ['bear', 'pear', 'chair'],
 ];
+// Pictures for rhyming words that aren't in the reading list.
+Object.assign(PIC, {
+  bee: '🐝', tree: '🌳', key: '🔑', three: '3️⃣', goat: '🐐', boat: '⛵', coat: '🧥', car: '🚗', star: '⭐', jar: '🫙',
+  sock: '🧦', rock: '🪨', clock: '🕐', cake: '🎂', snake: '🐍', lake: '🏞️', ring: '💍', king: '🤴', swing: '🛝',
+  house: '🏠', mouse: '🐭', snail: '🐌', nail: '💅', mail: '📬', moon: '🌙', spoon: '🥄', balloon: '🎈',
+  bear: '🐻', pear: '🍐', chair: '🪑',
+});
 
 const SIGHT1 = ['I', 'a', 'the', 'see', 'is', 'my'];
 const SIGHT2 = ['and', 'go', 'can', 'we', 'like', 'to', 'it', 'in'];
@@ -104,7 +117,9 @@ const GROUPS = [['s', 'a', 't'], ['p', 'i', 'n'], ['m', 'd', 'g'], ['o', 'c', 'k
 const lettersUpTo = gi => GROUPS.slice(0, gi + 1).flat();
 
 const isVowel = l => 'aeiou'.includes(l);
-const sayLetterSound = l => [{ text: LETTERS[l].sound, rate: 0.8 }];
+// Letter sounds are recorded clips (a real "sssss", not the letter name "ess").
+export const soundClip = l => `audio/sounds/${l}.wav`;
+const sayLetterSound = (l, rate = 1) => [{ clip: soundClip(l), rate, text: LETTERS[l].sound }];
 
 // ---------- small renderers ----------
 function letterTile(l, cls = '') {
@@ -132,9 +147,10 @@ const wordChoice = w => ({ value: w, cls: 'word-choice', html: `<span class="wrd
 const mascot = text => h('div', { class: 'mascot-wrap' }, h('div', { class: 'mascot bob' }, '🦉'), text ? h('div', { class: 'mascot-text' }, text) : null);
 
 // Pick target letters weighted towards the newest group.
+// Letters take turns, so one letter isn't asked again and again.
 function pickTarget(gi) {
-  const fresh = GROUPS[gi];
-  return Math.random() < 0.6 || gi === 0 ? pick(fresh) : pick(lettersUpTo(gi - 1));
+  const pool = Math.random() < 0.6 || gi === 0 ? GROUPS[gi] : lettersUpTo(gi - 1);
+  return fresh(pool, l => `letter:${l}`);
 }
 
 // ---------- question generators ----------
@@ -143,23 +159,25 @@ function qLetterSound(gi) {
   const known = lettersUpTo(gi);
   const others = pickN(known, 2, x => soundOf(x) === soundOf(l));
   const L = LETTERS[l];
+  const [word, pic] = fresh(L.ends ? ENDS_WITH_X : PICS[l], picKey);
+  const like = L.ends ? `like the end of ${word}` : `like ${word}`;
   return {
     key: `ls${l}`,
-    prompt: [`Which letter says`, { text: L.sound, rate: 0.8 }, `like ${L.word}?`],
-    render(stage) { stage.append(h('div', { class: 'scene' }, h('div', { class: 'giant-pic bob' }, L.pic))); },
+    prompt: [`Which letter says`, sayLetterSound(l), `${like}?`],
+    render(stage) { stage.append(h('div', { class: 'scene' }, h('div', { class: 'giant-pic bob' }, pic))); },
     choices: shuffle([l, ...others]).map(letterChoice),
     answer: l,
-    wrong: v => [`That is the letter ${LETTERS[v].name}.`, `It says`, sayLetterSound(v), `Find`, sayLetterSound(l), `like ${L.word}.`],
-    right: () => [`The letter ${L.name} says`, sayLetterSound(l), `${L.word}!`],
+    wrong: v => [`That is the letter ${LETTERS[v].name}.`, `It says`, sayLetterSound(v), `Find`, sayLetterSound(l), `${like}.`],
+    right: () => [`The letter ${L.name} says`, sayLetterSound(l), `${word}!`],
   };
 }
 
 function qStartsWith(gi) {
   let l = pickTarget(gi);
   if (l === 'x') l = 'q'; // x is heard at the end of words, not the start
-  const target = pick(PICS[l]);
+  const target = fresh(PICS[l], picKey);
   const distractLetters = pickN(Object.keys(PICS), 2, x => soundOf(x) === soundOf(l) || x === 'x');
-  const options = shuffle([target, ...distractLetters.map(x => pick(PICS[x]))]);
+  const options = shuffle([target, ...distractLetters.map(x => fresh(PICS[x], picKey))]);
   return {
     key: `sw${l}`,
     prompt: [`Which picture starts with`, sayLetterSound(l), '?', { pause: 200 }, options.map(o => o[0]).join(', ') + '?'],
@@ -190,8 +208,8 @@ function soundOutParts(word, wt) {
 }
 
 function qBlend(pool) {
-  const target = pick(pool);
-  const options = shuffle([target, ...pickN(pool, 2, x => x[0] === target[0])]);
+  const target = fresh(pool, picKey);
+  const options = shuffle([target, ...freshN(WORDS, 2, picKey, x => x[0] === target[0] || x[1] === target[1])]);
   let wt;
   return {
     key: `bl${target[0]}`,
@@ -206,7 +224,7 @@ function qBlend(pool) {
 
 function qHearWord(pool) {
   const words = pool.map(c => c[0]);
-  const target = pick(words);
+  const target = fresh(words, w => PIC[w] || w);
   // Distractors that look similar (share a letter in the same place) make kids look at every letter.
   const similar = words.filter(w => w !== target && [...w].some((l, i) => target[i] === l));
   const options = shuffle([target, ...(similar.length >= 2 ? pickN(similar, 2) : pickN(words, 2, w => w === target))]);
@@ -216,7 +234,7 @@ function qHearWord(pool) {
     render(stage) { stage.append(mascot('👂')); },
     choices: options.map(wordChoice),
     answer: target,
-    wrong: v => [`That says ${v}.`, ...[...v].map(l => ({ text: LETTERS[l].sound, rate: 0.8 })), `Find`, { text: target, rate: 0.85 }],
+    wrong: v => [`That says ${v}.`, ...[...v].map(l => sayLetterSound(l)), `Find`, { text: target, rate: 0.85 }],
     right: () => [`Yes, ${target}!`],
   };
 }
@@ -236,9 +254,9 @@ function qSight(words) {
 }
 
 function qSentence(pool) {
-  const target = pick(pool);
+  const target = fresh(pool, picKey);
   const text = pick(SENTENCES)(target[0]);
-  const options = shuffle([target, ...pickN(pool, 2, x => x === target)]);
+  const options = shuffle([target, ...freshN(pool, 2, picKey, x => x === target)]);
   let se;
   const readParts = () => [...se.spans.flatMap(s => [focusOn(se.spans, s), s.textContent.replace('.', '')]), focusOn(se.spans, null)];
   return {
@@ -254,9 +272,10 @@ function qSentence(pool) {
 
 // Rhyming is a listening game, so it works before she knows all the letters.
 function qRhyme() {
-  const fam = pick(RHYMES);
-  const [a, b] = pickN(fam, 2);
-  const others = pickN(RHYMES.filter(f => f !== fam), 2).map(f => pick(f));
+  // Prefer a family with at least two pictures not seen yet this round.
+  const fam = fresh(RHYMES, f => f[0] + '-family', f => f.filter(w => !isUsed(PIC[w])).length < 2);
+  const [a, b] = freshN(fam, 2, w => PIC[w]);
+  const others = freshN(RHYMES.filter(f => f !== fam).flat(), 2, w => PIC[w]);
   const options = shuffle([b, ...others]);
   return {
     key: `rh${a}`,
@@ -273,7 +292,7 @@ function qRhyme() {
 
 // Spell a word: tap the letters in order. Teaches hearing each sound in a word.
 function qSpell(pool, known) {
-  const [word, pic] = pick(pool.filter(([w]) => w.length === 3));
+  const [word, pic] = fresh(pool.filter(([w]) => w.length === 3), picKey);
   const letters = [...word];
   const extras = pickN(known, 2, l => letters.includes(l) || l === 'x' || l === 'q');
   let pos = 0;
@@ -320,7 +339,7 @@ function qFill(known, mode, maxLen) {
     .flatMap(([w, pic]) => blankable(w)
       .filter(i => mode === 'any' || i === 0 || (mode === 'ends' && i === w.length - 1))
       .map(i => ({ w, pic, i })));
-  const { w, pic, i } = pick(puzzles);
+  const { w, pic, i } = fresh(puzzles, z => z.pic);
   const missing = w[i];
   const sameKind = l => isVowel(l) === isVowel(missing);
   let others = pickN(known, 2, l => soundOf(l) === soundOf(missing) || l === 'x' || l === 'q' || !sameKind(l));
@@ -397,7 +416,7 @@ function blendSlide(word, pic, first) {
       first ? 'You know enough letters to read a word! We say each sound, then push the sounds together.' : "Let's read another one.",
       ...soundOutParts(word, wt),
       'Faster!',
-      ...[...word].flatMap((l, i) => [focusOn(wt.tiles, wt.tiles[i]), { text: LETTERS[l].sound, rate: 1.3 }]),
+      ...[...word].flatMap((l, i) => [focusOn(wt.tiles, wt.tiles[i]), sayLetterSound(l, 1.35)]),
       () => { focusOn(wt.tiles, null)(); wt.tiles.forEach(t => t.classList.add('glow')); p.classList.remove('hidden-pic'); },
       { text: word, rate: 0.9 }, `${word}!`,
     ],
@@ -439,7 +458,8 @@ function fillSlide() {
       return slot;
     },
     say: slot => ['Uh oh! A letter fell out of this word.', 'pig.', 'What sound does pig start with?', { pause: 400 },
-      'puh!', () => { slot.textContent = 'p'; slot.classList.add('filled'); }, 'puh, ih, guh. pig!', 'You can fix words like this!'],
+      sayLetterSound('p'), () => { slot.textContent = 'p'; slot.classList.add('filled'); },
+      sayLetterSound('p'), sayLetterSound('i'), sayLetterSound('g'), 'pig!', 'You can fix words like this!'],
   };
 }
 
@@ -498,7 +518,7 @@ export const LEVELS = [
     gen: () => pick([() => qBlend(WORDS), () => qHearWord(SHORT), () => qHearWord(SHORT), () => qFill(ALL, 'any', 5), () => qSpell(SHORT, ALL)])(),
     lesson: () => [{
       render(stage) { const el = h('div', { class: 'giant-word' }, 'dog'); stage.append(mascot('👂'), h('div', { class: 'scene' }, el)); return el; },
-      say: el => ['Now I will say a word, and you find it!', 'Look at the first letter. Then the others.', glow(el), 'This says', 'duh', 'aw', 'guh', 'dog!'],
+      say: el => ['Now I will say a word, and you find it!', 'Look at the first letter. Then the others.', glow(el), 'This says', sayLetterSound('d'), sayLetterSound('o'), sayLetterSound('g'), 'dog!'],
     }],
   },
   { name: 'Sight words 1', gen: () => qSight(SIGHT1), lesson: () => sightLesson(SIGHT1) },

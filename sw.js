@@ -1,6 +1,6 @@
 // Offline support: cache the app so it works on the iPad without internet.
 // Bump VERSION whenever you change any file so the iPad picks up the update.
-const VERSION = 'ollies-tree-v4';
+const VERSION = 'ollies-tree-v5';
 const APP_FILES = [
   './',
   'index.html',
@@ -18,6 +18,8 @@ const APP_FILES = [
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/apple-touch-icon.png',
+  // recorded letter sounds
+  ...'abcdefghijklmnopqrstuvwxyz'.split('').map(l => `audio/sounds/${l}.wav`),
 ];
 
 self.addEventListener('install', e => {
@@ -50,8 +52,9 @@ self.addEventListener('fetch', e => {
   if (url.origin !== location.origin) return;
 
   // App files: network first (so updates arrive), falling back to cache when offline.
+  // 'no-cache' makes the browser check with the server instead of reusing a stale copy.
   e.respondWith(
-    fetch(req)
+    fetch(req, { cache: 'no-cache' })
       .then(r => {
         if (r.ok) caches.open(VERSION).then(c => c.put(req, r.clone()));
         return r;

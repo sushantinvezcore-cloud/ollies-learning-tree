@@ -1,6 +1,8 @@
 // Text-to-speech wrapper. Everything a pre-reader needs is spoken aloud.
 // iPad Safari only allows speech after a user tap, so unlock() is called from the Start button.
 
+import * as sound from './sound.js';
+
 const synth = 'speechSynthesis' in window ? window.speechSynthesis : null;
 let voice = null;
 let baseRate = 0.85;
@@ -56,6 +58,7 @@ export function unlock() {
 
 export function stop() {
   token++;
+  sound.stopClip();
   if (synth && (synth.speaking || synth.pending)) synth.cancel();
 }
 
@@ -102,6 +105,10 @@ export async function speak(...parts) {
     if (typeof p === 'function') p();
     else if (typeof p === 'string') await sayOne(p);
     else if (p.pause) await wait(p.pause);
+    else if (p.clip) {
+      // Recorded sound (e.g. a letter sound); fall back to the voice if audio can't play.
+      try { await sound.playClip(p.clip, p.rate || 1); } catch { if (p.text) await sayOne(p.text, p); }
+    }
     else if (p.text) await sayOne(p.text, p);
   }
   return my === token;

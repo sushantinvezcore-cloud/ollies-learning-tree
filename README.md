@@ -60,17 +60,13 @@ the grown-ups area.
 
 ## Putting it on the iPad
 
-The game is a plain website: no build step, no app store. To install it, the files have to be served
-over **https**. The easiest free options are:
+The game is a plain website: no build step, no app store. It's published with GitHub Pages at:
 
-1. **Netlify Drop**: go to https://app.netlify.com/drop and drag this whole folder onto the page. You get
-   an https link right away.
-2. **GitHub Pages**: push this folder to a GitHub repo and turn on Pages (Settings → Pages → Deploy from
-   branch).
+**https://sushantinvezcore-cloud.github.io/ollies-learning-tree/**
 
-Then, on the iPad:
+On the iPad:
 
-1. Open the link in **Safari**.
+1. Open that link in **Safari**.
 2. Tap the Share button, then **Add to Home Screen**.
 3. Open it from the home screen icon. It runs full screen and keeps working offline.
 
@@ -85,8 +81,9 @@ Open http://localhost:8080 on this computer. To try it on the iPad over Wi‑Fi,
 
 ### Updating
 
-After changing any file, change `VERSION` in `sw.js` (for example `ollies-tree-v5`) so the installed copy
-picks up the update.
+After changing any file, change `VERSION` in `sw.js` (for example `ollies-tree-v5`), then commit and push to
+`main`. GitHub Pages republishes within a minute or two, and the iPad picks up the new version the next
+time the app is opened while online. Her progress and stickers are kept.
 
 ## Files
 

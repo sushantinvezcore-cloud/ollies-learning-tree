@@ -141,7 +141,9 @@ export async function speak(...parts) {
     const text = typeof p === 'string' ? p : p.text;
     if (p.clip) {
       if (spokeBefore) await wait(120);
-      await sound.playClip(p.clip, p.rate || 1);
+      const played = await sound.playClip(p.clip, p.rate || 1);
+      // If the sound can't play, say something useful instead of leaving a gap.
+      if (!played && p.fallback && my === token) await sayOne(p.fallback);
       spokeBefore = true;
       continue;
     }

@@ -119,7 +119,7 @@ const lettersUpTo = gi => GROUPS.slice(0, gi + 1).flat();
 const isVowel = l => 'aeiou'.includes(l);
 // Letter sounds are recorded clips (a real "sssss", not the letter name "ess").
 export const soundClip = l => `audio/sounds/${l}.wav`;
-const sayLetterSound = (l, rate = 1) => [{ clip: soundClip(l), rate }];
+const sayLetterSound = (l, rate = 1) => [{ clip: soundClip(l), rate, fallback: `the letter ${LETTERS[l].name}` }];
 
 // ---------- small renderers ----------
 function letterTile(l, cls = '') {

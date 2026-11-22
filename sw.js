@@ -1,6 +1,6 @@
 // Offline support: cache the app so it works on the iPad without internet.
 // Bump VERSION whenever you change any file so the iPad picks up the update.
-const VERSION = 'ollies-tree-v7';
+const VERSION = 'ollies-tree-v8';
 const APP_FILES = [
   './',
   'index.html',

@@ -15,7 +15,7 @@ const STICKERS = ['🦄', '🐶', '🐱', '🦊', '🐼', '🐨', '🐯', '🦁'
   '🏰', '👑', '🦕', '🐝', '🐰', '🐻', '🦉', '🐿️', '🍦', '🎀'];
 
 const S = store.get;
-const APP_VERSION = 7;
+const APP_VERSION = 8;
 let session = null;
 
 // ---------------- screens ----------------
@@ -431,12 +431,14 @@ function openParent() {
         : null,
       h('div', { class: 'p-row' }, h('label', {}, 'Letter sounds'),
         h('button', { class: 'p-btn', onclick: async e => {
+          sound.unlock(); // this tap can unlock audio too
           const out = e.target.nextElementSibling;
           out.textContent = 'Playing s, a, t…';
-          for (const l of ['s', 'a', 't']) { await sound.playClip(soundClip(l)); await new Promise(r => setTimeout(r, 300)); }
-          out.textContent = sound.lastClipMethod().startsWith('failed')
-            ? `Couldn't play sounds (${sound.lastClipMethod()}). Check the iPad volume.`
-            : `Played with ${sound.lastClipMethod()}. You should hear "sss", "a" (as in ant), "t".`;
+          let ok = 0;
+          for (const l of ['s', 'a', 't']) { if (await sound.playClip(soundClip(l))) ok++; await new Promise(r => setTimeout(r, 300)); }
+          out.textContent = ok === 3
+            ? `✅ Sounds work (${sound.lastClipMethod()}). You should hear "sss", "a" as in ant, and "t".`
+            : `❌ ${ok}/3 sounds played. Details: ${sound.audioDiag()}`;
         } }, '▶ Test'), h('span', { class: 'p-sub' }, ''))),
     section('About', h('p', { class: 'p-note' }, `Version ${APP_VERSION}`)),
     section('Reset',

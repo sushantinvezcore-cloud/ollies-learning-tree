@@ -3,10 +3,11 @@ import * as speech from './speech.js';
 import * as sound from './sound.js';
 import * as store from './store.js';
 import { $, h, pick, shuffle, resetFresh } from './ui.js';
-import { LEVELS as MATH } from './math.js';
-import { LEVELS as READ, LETTERS, soundClip } from './reading.js';
+import { LEVELS as MATH, writingQuestion as mathWriting } from './math.js';
+import { LEVELS as READ, LETTERS, soundClip, writingQuestion as readWriting } from './reading.js';
 
 const CURRICULA = { math: MATH, read: READ };
+const WRITERS = { math: mathWriting, read: readWriting };
 const TRACK_NAMES = { math: 'Numbers', read: 'Letters' };
 const PRAISE = ['Great job!', 'You got it!', 'Yay!', 'Super!', 'Well done!', 'Awesome!', 'Hooray!', 'Wonderful!'];
 const STICKERS = ['🦄', '🐶', '🐱', '🦊', '🐼', '🐨', '🐯', '🦁', '🐸', '🐵', '🐧', '🐥', '🦋', '🐞', '🐢', '🐙', '🦀', '🐠',
@@ -14,6 +15,7 @@ const STICKERS = ['🦄', '🐶', '🐱', '🦊', '🐼', '🐨', '🐯', '🦁'
   '🏰', '👑', '🦕', '🐝', '🐰', '🐻', '🦉', '🐿️', '🍦', '🎀'];
 
 const S = store.get;
+const APP_VERSION = 7;
 let session = null;
 
 // ---------------- screens ----------------
@@ -129,6 +131,26 @@ function buildQuestions(track, count) {
   });
 }
 
+/**
+ * Swap 2–3 questions a day for a writing activity (trace a word / count and write).
+ * The day's number is picked once and remembered, so stopping and coming back doesn't add more.
+ */
+function addWriting(track, plan, extraRound) {
+  const t = store.today(track);
+  if (!t.writeTarget) { t.writeTarget = 2 + Math.floor(Math.random() * 2); store.save(); }
+  const left = extraRound ? 0 : Math.max(0, t.writeTarget - (t.writes || 0));
+  const n = Math.min(left, Math.max(0, plan.length - 1));
+  if (!n) return plan;
+  // Spread them out: one in each part of the round, never as the very first question.
+  const level = S().tracks[track].level;
+  const size = (plan.length - 1) / n;
+  for (let k = 0; k < n; k++) {
+    const i = 1 + Math.floor(k * size + Math.random() * size);
+    plan[Math.min(i, plan.length - 1)] = { level, current: false, writing: true, make: () => WRITERS[track](level) };
+  }
+  return plan;
+}
+
 function startSession(track) {
   resetFresh(); // no picture, object or word repeats within this round
   const st = S();
@@ -138,7 +160,7 @@ function startSession(track) {
   session = {
     track,
     extra: finished,
-    plan: buildQuestions(track, remaining),
+    plan: addWriting(track, buildQuestions(track, remaining), finished),
     idx: 0,
     total: st.perDay,
     offset: finished ? 0 : t.done,
@@ -278,7 +300,8 @@ async function onCorrect(s, btn) {
     if (!s.extra) {
       const t = store.today(s.track);
       t.done++;
-      if (s.firstTry) t.correct++;
+      if (s.firstTry && !q.noScore) t.correct++;
+      if (q.writing) t.writes = (t.writes || 0) + 1;
     }
     store.save();
     s.idx++;
@@ -382,7 +405,8 @@ function openParent() {
   const rate = h('input', { type: 'range', min: 0.6, max: 1.1, step: 0.05, value: st.rate });
   rate.addEventListener('change', () => { st.rate = Number(rate.value); store.save(); speech.configure({ rate: st.rate }); speech.speak('This is how fast I talk.'); });
 
-  const voices = speech.englishVoices();
+  // Best-sounding voices first; robotic novelty voices are left out.
+  const voices = speech.englishVoices().filter(v => speech.voiceScore(v) > -100).sort((a, b) => speech.voiceScore(b) - speech.voiceScore(a));
   const voiceSel = h('select', {
     onchange: e => { st.voiceName = e.target.value || null; store.save(); speech.configure({ voiceName: st.voiceName }); speech.speak('Hi! I am Ollie the owl. This is how I sound.'); },
   }, h('option', { value: '' }, 'Automatic'), ...voices.map(v => {
@@ -401,7 +425,20 @@ function openParent() {
       h('div', { class: 'p-row' }, h('label', {}, 'Allow extra rounds after finishing'), extra),
       h('div', { class: 'p-row' }, h('label', {}, 'Voice speed'), rate),
       h('div', { class: 'p-row' }, h('label', {}, 'Voice'), voiceSel),
-      h('p', { class: 'p-note' }, `Current voice: ${speech.currentVoiceName() || 'none found'}. On iPad, nicer voices can be downloaded in Settings → Accessibility → Spoken Content → Voices → English.`)),
+      h('p', { class: 'p-note' }, `Current voice: ${speech.currentVoiceName() || 'none found'}.`),
+      speech.currentVoiceIsBasic()
+        ? h('p', { class: 'p-tip' }, '💡 For a warm, natural teacher voice: on the iPad open Settings → Accessibility → Read & Speak (or Spoken Content) → Voices → English, and download "Ava (Premium)" or "Zoe (Premium)". Then come back here and pick it. It works offline once downloaded.')
+        : null,
+      h('div', { class: 'p-row' }, h('label', {}, 'Letter sounds'),
+        h('button', { class: 'p-btn', onclick: async e => {
+          const out = e.target.nextElementSibling;
+          out.textContent = 'Playing s, a, t…';
+          for (const l of ['s', 'a', 't']) { await sound.playClip(soundClip(l)); await new Promise(r => setTimeout(r, 300)); }
+          out.textContent = sound.lastClipMethod().startsWith('failed')
+            ? `Couldn't play sounds (${sound.lastClipMethod()}). Check the iPad volume.`
+            : `Played with ${sound.lastClipMethod()}. You should hear "sss", "a" (as in ant), "t".`;
+        } }, '▶ Test'), h('span', { class: 'p-sub' }, ''))),
+    section('About', h('p', { class: 'p-note' }, `Version ${APP_VERSION}`)),
     section('Reset',
       h('button', { class: 'p-danger', onclick: () => { if (confirm('Erase all progress and stickers?')) { store.reset(); openParent(); } } }, 'Erase all progress')),
   );

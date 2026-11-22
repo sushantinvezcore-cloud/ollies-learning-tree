@@ -1,7 +1,7 @@
 // Math curriculum for a child who can already count a little:
 // counting 10–30 -> teen numbers and ten-frames -> adding/taking away (single digits, at least one 4–9) -> to 20.
 // Each level has a teaching lesson (shown once, when the level starts) and a question generator.
-import { h, rand, pick, numberChoices, countGroup, Counter, equation, focusOn, glow, traceBoard, fresh, shuffle } from './ui.js';
+import { h, rand, pick, numberChoices, countGroup, Counter, equation, focusOn, glow, traceBoard, fresh, shuffle, drawPad, colorPicker, doneButton } from './ui.js';
 import * as speech from './speech.js';
 import { qPattern, qShapeFind, qShapeThing, patternSlide, shapesSlide, shapeThingsSlide } from './explore.js';
 
@@ -61,7 +61,7 @@ function addPair(maxSum, minA = 1) {
 
 /** Objects in rows of ten (with a gap after five) for big counts, rows of five for small ones. */
 function bigGroup(n, emoji, size) {
-  if (n <= 10) return countGroup(n, emoji, size || (n <= 5 ? 'lg' : 'md'));
+  if (n < 10) return countGroup(n, emoji, size || (n <= 5 ? 'lg' : 'md'));
   const g = countGroup(n, emoji, size || (n <= 20 ? 'md' : 'sm'), 10);
   g.el.classList.add('tens');
   return g;
@@ -275,12 +275,13 @@ function qTrace(lo, hi) {
     key: `trace${n}`,
     noScore: true,
     prompt: [`This is ${n}.`, `Trace ${n} with your finger.`, 'Follow the grey line.'],
+    writing: true,
     render(stage, api) {
       const board = traceBoard(String(n), {
         onDone: () => api.success(),
         onMessy: () => speech.speak('Try to stay on the grey line. You can do it!'),
       });
-      stage.append(board.el);
+      stage.append(h('div', { class: 'write-scene' }, colorPicker(c => board.setColor(c)), board.el));
     },
     right: () => [`You wrote ${n}!`],
   };
@@ -394,7 +395,7 @@ export const LEVELS = [
   },
   {
     name: 'Teen numbers and ten-frames',
-    gen: mix([3, () => qTenFrame(11, 19)], [2, () => qNext(10, 20, true)], [2, () => qBigger(10, 20, false)], [2, () => qFind(10, 20)], [2, () => qTrace(10, 20)], [1, () => qCount(10, 20)], [1, bonus(() => qPattern('medium'))]),
+    gen: mix([3, () => qTenFrame(11, 19)], [2, () => qNext(10, 20, true)], [2, () => qBigger(10, 20, false)], [2, () => qFind(10, 20)], [1, () => qCount(10, 20)], [1, bonus(() => qPattern('medium'))]),
     lesson: () => [
       tenFrameSlide(10, 'This is a ten-frame. When it is full, it holds ten.'),
       tenFrameSlide(14, 'One full frame is ten. Then we count on.'),
@@ -405,7 +406,7 @@ export const LEVELS = [
   },
   {
     name: 'Counting to 30',
-    gen: mix([3, () => qCount(15, 30)], [2, () => qTenFrame(11, 30)], [2, () => qNext(10, 30, true)], [2, () => qBigger(10, 30, true)], [2, () => qFind(10, 30)], [1, () => qTrace(10, 30)], [1, bonus(qShapeThing)]),
+    gen: mix([3, () => qCount(15, 30)], [2, () => qTenFrame(11, 30)], [2, () => qNext(10, 30, true)], [2, () => qBigger(10, 30, true)], [2, () => qFind(10, 30)], [1, bonus(qShapeThing)]),
     lesson: () => [
       tenFrameSlide(30, "Let's count by tens! Each full frame is ten."),
       numeralsSlide(range(20, 30), 'Here are the numbers from twenty to thirty.', 'Thirty!'),
@@ -442,3 +443,36 @@ export const LEVELS = [
     }],
   },
 ];
+
+// ---------- writing: count and write (2–3 a day, never marked right or wrong) ----------
+/** Count the objects, then write the number freehand. Ollie then shows the number so she can compare. */
+function qCountWrite(lo, hi) {
+  const n = rand(lo, hi);
+  const t = thing();
+  let answerEl, counter;
+  return {
+    key: `cw${n}`,
+    writing: true,
+    noScore: true,
+    prompt: [`How many ${t.many}?`, 'Count them, then write the number.'],
+    render(stage, api) {
+      const g = bigGroup(n, t.e, n > 10 ? 'sm' : 'md');
+      counter = new Counter(g.objs);
+      const done = doneButton(() => api.success());
+      const pad = drawPad({ onInk: done.ready, cls: 'number-pad' });
+      answerEl = h('div', { class: 'write-answer' }, n);
+      pad.el.append(answerEl); // shown in the pad's corner once she taps ✓
+      stage.append(h('div', { class: 'write-scene count-write' },
+        h('div', { class: 'cw-left' }, g.el),
+        h('div', { class: 'cw-right' }, colorPicker(c => pad.setColor(c)), pad.el)));
+      api.choicesEl.append(done.el);
+    },
+    right: () => [() => answerEl.classList.add('shown'), `There are ${n} ${noun(t, n)}!`, `${n} looks like this. Does yours look the same?`],
+  };
+}
+
+/** One of the day's writing activities, matched to her level. */
+export function writingQuestion(level) {
+  const [lo, hi] = level >= 2 ? [12, 30] : [10, 20];
+  return Math.random() < 0.65 ? qCountWrite(lo, hi) : qTrace(lo, hi);
+}

@@ -8,7 +8,7 @@ const DEFAULT = () => ({
   curriculum: { ...CURRICULUM },
   name: '',
   perDay: 10,
-  rate: 0.85,
+  rate: 0.8, // a little slower than normal, so every word is clear
   voiceName: null,
   extraPractice: false,
   tracks: {
@@ -32,6 +32,7 @@ function load() {
       if ((s.curriculum?.[t] || 1) !== CURRICULUM[t]) merged.tracks[t] = d.tracks[t];
     }
     merged.curriculum = { ...CURRICULUM };
+    if (merged.rate === 0.85) merged.rate = 0.8; // old default was a bit fast
     return merged;
   } catch {
     return DEFAULT();

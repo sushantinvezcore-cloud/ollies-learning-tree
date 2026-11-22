@@ -1,6 +1,6 @@
 // Reading curriculum (phonics-first):
 // letter sounds (in the classic s-a-t-p-i-n order) -> sounding out 3-letter words -> sight words -> sentences.
-import { h, pick, pickN, shuffle, focusOn, glow, fresh, freshN, isUsed } from './ui.js';
+import { h, pick, pickN, shuffle, focusOn, glow, fresh, freshN, isUsed, drawPad, colorPicker, doneButton } from './ui.js';
 import * as speech from './speech.js';
 import { FILL_WORDS, blankable } from './words.js';
 
@@ -119,7 +119,7 @@ const lettersUpTo = gi => GROUPS.slice(0, gi + 1).flat();
 const isVowel = l => 'aeiou'.includes(l);
 // Letter sounds are recorded clips (a real "sssss", not the letter name "ess").
 export const soundClip = l => `audio/sounds/${l}.wav`;
-const sayLetterSound = (l, rate = 1) => [{ clip: soundClip(l), rate, text: LETTERS[l].sound }];
+const sayLetterSound = (l, rate = 1) => [{ clip: soundClip(l), rate }];
 
 // ---------- small renderers ----------
 function letterTile(l, cls = '') {
@@ -306,6 +306,7 @@ function qSpell(pool, known) {
       stage.append(h('div', { class: 'scene' },
         h('button', { class: 'giant-pic spell-pic', onclick: () => speech.speak({ text: word, rate: 0.85 }) }, pic),
         h('div', { class: 'slots' }, slots)));
+      api.choicesEl.classList.add('spell');
       for (const l of shuffle([...letters, ...extras])) {
         const b = h('button', { class: 'choice letter-choice', html: `<span class="ltr">${l}</span>` });
         b.addEventListener('click', () => {
@@ -371,7 +372,8 @@ function letterSlide(l) {
       const tile = letterTile(l, 'giant');
       const pic = h('div', { class: 'giant-pic hidden-pic' }, L.pic);
       const big = h('div', { class: 'case-pair' }, h('span', {}, l.toUpperCase()), h('span', {}, l));
-      stage.append(h('div', { class: 'scene letter-intro' }, h('div', { class: 'row' }, tile, pic), big));
+      // One row (landscape): little letter, big + little pair, then the picture.
+      stage.append(h('div', { class: 'scene letter-intro' }, h('div', { class: 'row' }, tile, big, pic)));
       return { tile, pic, big };
     },
     say: ({ tile, pic, big }) => [
@@ -517,7 +519,7 @@ export const LEVELS = [
     name: 'Finding words',
     gen: () => pick([() => qBlend(WORDS), () => qHearWord(SHORT), () => qHearWord(SHORT), () => qFill(ALL, 'any', 5), () => qSpell(SHORT, ALL)])(),
     lesson: () => [{
-      render(stage) { const el = h('div', { class: 'giant-word' }, 'dog'); stage.append(mascot('👂'), h('div', { class: 'scene' }, el)); return el; },
+      render(stage) { const el = h('div', { class: 'giant-word' }, 'dog'); stage.append(h('div', { class: 'scene' }, h('div', { class: 'row' }, mascot('👂'), el))); return el; },
       say: el => ['Now I will say a word, and you find it!', 'Look at the first letter. Then the others.', glow(el), 'This says', sayLetterSound('d'), sayLetterSound('o'), sayLetterSound('g'), 'dog!'],
     }],
   },
@@ -534,3 +536,27 @@ export const LEVELS = [
     }],
   },
 ];
+
+// ---------- writing: trace a word (2–3 a day, never marked right or wrong) ----------
+/** Trace a picture word in big dotted letters, in her choice of colour. Longer words as she progresses. */
+export function writingQuestion(level) {
+  const maxLen = level < 3 ? 3 : level < 9 ? 4 : 5;
+  const [w, pic] = fresh(FILL_WORDS.filter(([x]) => x.length >= 3 && x.length <= maxLen), p => p[1]);
+  return {
+    key: `write${w}`,
+    writing: true,
+    noScore: true,
+    prompt: ['This word says', { text: w, rate: 0.85 }, '.', `Trace ${w} with your finger.`, 'You can pick any colour you like!'],
+    render(stage, api) {
+      const done = doneButton(() => api.success());
+      const pad = drawPad({ guide: w, onInk: done.ready, cls: 'word-pad' });
+      const picker = colorPicker(c => pad.setColor(c));
+      stage.append(h('div', { class: 'write-scene' },
+        h('div', { class: 'write-top' },
+          h('button', { class: 'write-pic', onclick: () => speech.speak({ text: w, rate: 0.85 }) }, pic), picker),
+        pad.el));
+      api.choicesEl.append(done.el);
+    },
+    right: () => ['Beautiful writing!', { text: w, rate: 0.85 }, '!'],
+  };
+}

@@ -61,6 +61,27 @@ missing, never silent letters or pairs like "sh" or "ee". The difficulty rises s
 - from letter level 7: any letter, including the vowel in the middle (`c_t`)
 - once she knows every letter: 4- and 5-letter words too (`fr_g`, `zeb_a`)
 
+### Writing (2–3 a day in each of numbers and letters)
+
+- **Trace a word:** a picture word in big dotted letters on writing lines (3-letter words first, longer
+  ones later).
+- **Count and write:** count the objects, write the number freehand, then Ollie shows the number so she
+  can compare.
+- **Trace a number** (10–30).
+
+Writing is never marked right or wrong, and she taps ✓ when she's done. She picks her pen from 15 dark
+colours, and the game remembers her choice. These activities take the place of regular questions, so a
+round is still 10. The number per day (2 or 3) is fixed for the day, so stopping and coming back doesn't add more.
+
+## Voice and sounds
+
+- The voice is chosen automatically: natural "Premium" or "Enhanced" female voices first, and the robotic
+  novelty voices are never used. It speaks a little slower than normal.
+- For the warmest voice, download **Ava (Premium)** on the iPad: Settings → Accessibility → Read & Speak
+  (or Spoken Content) → Voices → English. Then pick it in the grown-ups area.
+- Letter sounds are recorded clips, not the voice. The grown-ups area has a **▶ Test** button that plays
+  s, a, t and says how the iPad played them.
+
 ## Grown-ups area
 
 Press and hold ⚙️ on the home screen for 2 seconds. In there you can:

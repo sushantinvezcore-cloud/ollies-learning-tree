@@ -3,10 +3,16 @@ let ctx = null;
 
 export function unlock() {
   try {
+    // Safari 16.4+: play sounds even when the iPad is set to silent (like a video would).
+    if (navigator.audioSession) navigator.audioSession.type = 'playback';
     if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
-    if (ctx.state === 'suspended') ctx.resume();
+    if (ctx.state !== 'running') ctx.resume();
   } catch { /* no audio */ }
 }
+
+// iPad pauses ("interrupts") audio when the app goes to the background; wake it on the next tap.
+document.addEventListener('pointerdown', () => { if (ctx && ctx.state !== 'running') ctx.resume().catch(() => {}); }, true);
+export const audioState = () => (ctx ? ctx.state : 'none');
 
 function tone(freq, start, dur, type = 'sine', vol = 0.18) {
   if (!ctx) return;
@@ -47,24 +53,56 @@ export function loadClip(url) {
 
 export function preload(urls) { if (ctx) urls.forEach(u => loadClip(u).catch(() => {})); }
 
-/** Play a clip; resolves when it ends. Rejects if audio isn't available (caller falls back to speech). */
-export async function playClip(url, rate = 1) {
-  if (!ctx) throw new Error('no audio');
-  if (ctx.state === 'suspended') await ctx.resume();
-  const buf = await loadClip(url);
+let lastMethod = '';
+export const lastClipMethod = () => lastMethod;
+
+function playWebAudio(buf, rate) {
   return new Promise(resolve => {
     const src = ctx.createBufferSource();
     src.buffer = buf;
     src.playbackRate.value = rate;
-    const g = ctx.createGain();
-    g.gain.value = 1;
-    src.connect(g).connect(ctx.destination);
+    src.connect(ctx.destination);
     const t = setTimeout(done, (buf.duration / rate) * 1000 + 400);
     function done() { clearTimeout(t); if (current === src) current = null; resolve(); }
     src.onended = done;
     current = src;
     src.start();
   });
+}
+
+// Plain <audio> element: a second way to play if Web Audio is unavailable.
+const elements = {};
+function playElement(url, rate) {
+  return new Promise((resolve, reject) => {
+    const a = elements[url] || (elements[url] = new Audio(url));
+    a.currentTime = 0;
+    a.playbackRate = rate;
+    const t = setTimeout(() => { cleanup(); resolve(); }, 3000);
+    const cleanup = () => { clearTimeout(t); a.onended = null; a.onerror = null; };
+    a.onended = () => { cleanup(); resolve(); };
+    a.onerror = () => { cleanup(); reject(new Error('audio element failed')); };
+    current = { stop: () => { a.pause(); cleanup(); resolve(); } };
+    a.play().catch(e => { cleanup(); reject(e); });
+  });
+}
+
+/** Play a recorded clip; resolves when it ends. Never throws: tries Web Audio, then an <audio> element. */
+export async function playClip(url, rate = 1) {
+  try {
+    if (!ctx) throw new Error('no audio context');
+    if (ctx.state !== 'running') await Promise.race([ctx.resume(), new Promise(r => setTimeout(r, 300))]);
+    if (ctx.state !== 'running') throw new Error(`audio ${ctx.state}`);
+    const buf = await loadClip(url);
+    lastMethod = 'web audio';
+    return await playWebAudio(buf, rate);
+  } catch (e1) {
+    try {
+      lastMethod = 'audio element';
+      return await playElement(url, rate);
+    } catch (e2) {
+      lastMethod = `failed: ${e1.message}; ${e2.message}`;
+    }
+  }
 }
 
 export function stopClip() {
